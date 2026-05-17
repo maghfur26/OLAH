@@ -1,0 +1,16 @@
+[project]
+name = "try-capstone"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.136.1",
+    "numpy>=2.4.4",
+    "pandas>=3.0.3",
+    "scikit-learn>=1.8.0",
+    "setuptools>=82.0.1",
+    "tensorboard>=2.20.0",
+    "tensorflow>=2.21.0",
+    "uvicorn>=0.47.0",
+]
