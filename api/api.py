@@ -163,7 +163,7 @@ async def get_popular(n: int = 10, category: Optional[str] = None):
 
 
 @app.get("/recipe/random", tags=["Recipes"])
-async def get_random(n: int = 5, category: Optional[str] = None):
+async def get_random(n: int = 10, category: Optional[str] = None):
     """Resep random — untuk homepage / discovery."""
     import random
     if not engine._is_loaded:

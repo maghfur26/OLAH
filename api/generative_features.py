@@ -69,22 +69,20 @@ class OlahGenerativeFeatures:
         
         Digunakan di: halaman detail resep → section "Tips dari OLAH"
         """
-        prompt = f"""
-Berikan 3 tips memasak praktis untuk resep "{recipe_name}" 
-dengan bahan utama: {", ".join(ingredients[:8])}.
+        prompt = f"""Berikan 3 tips memasak praktis untuk resep "{recipe_name}" dengan bahan utama: {", ".join(ingredients[:8])}.
 
-Respons dalam JSON dengan format:
-{{
-  "recipe_name": "{recipe_name}",
-  "tips": [
-    {{"tip": "...", "why": "..."}},
-    {{"tip": "...", "why": "..."}},
-    {{"tip": "...", "why": "..."}}
-  ],
-  "difficulty": "mudah|sedang|sulit",
-  "estimated_time_minutes": 30
-}}
-"""
+        Respons dalam JSON dengan format:
+        {{
+          "recipe_name": "{recipe_name}",
+          "tips": [
+            {{"tip": "...", "why": "..."}},
+            {{"tip": "...", "why": "..."}},
+            {{"tip": "...", "why": "..."}}
+          ],
+          "difficulty": "mudah|sedang|sulit",
+          "estimated_time_minutes": 30
+        }}
+        """
         raw = self._call_gemini(prompt)
         # Parse JSON dari response
         try:
@@ -106,25 +104,23 @@ Respons dalam JSON dengan format:
         
         Digunakan di: halaman rekomendasi → "Tidak punya X? Ganti dengan..."
         """
-        prompt = f"""
-Pengguna tidak memiliki "{missing_ingredient}" untuk resep "{recipe_name}".
-Berikan 2-3 alternatif substitusi yang mudah ditemukan.
+        prompt = f"""Pengguna tidak memiliki "{missing_ingredient}" untuk resep "{recipe_name}". Berikan 2-3 alternatif substitusi yang mudah ditemukan.
 
-Respons dalam JSON:
-{{
-  "missing_ingredient": "{missing_ingredient}",
-  "recipe_name": "{recipe_name}",
-  "substitutes": [
-    {{
-      "ingredient": "nama bahan pengganti",
-      "ratio": "perbandingan penggunaan, misal: 1:1 atau 1 sdm = 2 sdm",
-      "note": "catatan penggunaan"
-    }}
-  ],
-  "can_skip": true/false,
-  "skip_note": "catatan jika bahan bisa dilewati"
-}}
-"""
+        Respons dalam JSON:
+        {{
+          "missing_ingredient": "{missing_ingredient}",
+          "recipe_name": "{recipe_name}",
+          "substitutes": [
+            {{
+              "ingredient": "nama bahan pengganti",
+              "ratio": "perbandingan penggunaan, misal: 1:1 atau 1 sdm = 2 sdm",
+              "note": "catatan penggunaan"
+            }}
+          ],
+          "can_skip": true/false,
+          "skip_note": "catatan jika bahan bisa dilewati"
+        }}
+        """
         raw = self._call_gemini(prompt)
         try:
             if "```json" in raw:
@@ -146,26 +142,24 @@ Respons dalam JSON:
             return {"ingredients": [], "status": "no_ingredients"}
 
         ingredients_str = ", ".join(ingredients[:10])
-        prompt = f"""
-Estimasikan masa simpan bahan-bahan berikut dalam kondisi penyimpanan normal:
-{ingredients_str}
+        prompt = f"""Estimasikan masa simpan bahan-bahan berikut dalam kondisi penyimpanan normal:{ingredients_str}
 
-Respons dalam JSON:
-{{
-  "estimations": [
-    {{
-      "ingredient": "nama bahan",
-      "shelf_life_days": 7,
-      "storage_method": "kulkas|freezer|suhu ruang",
-      "storage_tips": "cara menyimpan agar tahan lama",
-      "urgency": "segera|normal|tahan lama"
-    }}
-  ],
-  "priority_use": ["bahan yang paling cepat habis masa simpannya"]
-}}
+        Respons dalam JSON:
+        {{
+          "estimations": [
+            {{
+              "ingredient": "nama bahan",
+              "shelf_life_days": 7,
+              "storage_method": "kulkas|freezer|suhu ruang",
+              "storage_tips": "cara menyimpan agar tahan lama",
+              "urgency": "segera|normal|tahan lama"
+            }}
+          ],
+          "priority_use": ["bahan yang paling cepat habis masa simpannya"]
+        }}
 
-Urutkan dari yang paling cepat habis ke yang paling lama.
-"""
+        Urutkan dari yang paling cepat habis ke yang paling lama.
+        """
         raw = self._call_gemini(prompt)
         try:
             if "```json" in raw:
@@ -182,18 +176,16 @@ Urutkan dari yang paling cepat habis ke yang paling lama.
         
         Digunakan di: recipe card → deskripsi singkat yang menggugah selera
         """
-        prompt = f"""
-Buat deskripsi singkat (2 kalimat) yang menarik untuk resep "{recipe_name}" 
-kategori {category} dengan bahan: {", ".join(ingredients[:6])}.
+        prompt = f"""Buat deskripsi singkat (2 kalimat) yang menarik untuk resep "{recipe_name}" kategori {category} dengan bahan: {", ".join(ingredients[:6])}.
 
-Respons dalam JSON:
-{{
-  "recipe_name": "{recipe_name}",
-  "description": "deskripsi singkat menggugah selera...",
-  "tagline": "tagline pendek 5-7 kata",
-  "emoji": "emoji yang relevan"
-}}
-"""
+        Respons dalam JSON:
+        {{
+          "recipe_name": "{recipe_name}",
+          "description": "deskripsi singkat menggugah selera...",
+          "tagline": "tagline pendek 5-7 kata",
+          "emoji": "emoji yang relevan"
+        }}
+        """
         raw = self._call_gemini(prompt)
         try:
             if "```json" in raw:
@@ -222,31 +214,27 @@ Respons dalam JSON:
                 "message": "Kamu sudah punya semua bahan! 🎉"
             }
 
-        prompt = f"""
-Untuk memasak "{recipe_name}", pengguna perlu membeli bahan berikut:
-{", ".join(missing)}
+        prompt = f"""Untuk memasak "{recipe_name}", pengguna perlu membeli bahan berikut:{", ".join(missing)}Buat daftar belanja yang terorganisir dengan estimasi harga dan jumlah.
 
-Buat daftar belanja yang terorganisir dengan estimasi harga dan jumlah.
-
-Respons dalam JSON:
-{{
-  "recipe_name": "{recipe_name}",
-  "shopping_list": [
-    {{
-      "ingredient": "nama bahan",
-      "quantity": "jumlah yang perlu dibeli",
-      "estimated_price_idr": 5000,
-      "notes": "tips beli, misal: pilih yang segar"
-    }}
-  ],
-  "total_estimated_price_idr": 25000,
-  "store_section": {{
-    "sayuran": ["..."],
-    "bumbu": ["..."],
-    "protein": ["..."]
-  }}
-}}
-"""
+        Respons dalam JSON:
+        {{
+          "recipe_name": "{recipe_name}",
+          "shopping_list": [
+            {{
+              "ingredient": "nama bahan",
+              "quantity": "jumlah yang perlu dibeli",
+              "estimated_price_idr": 5000,
+              "notes": "tips beli, misal: pilih yang segar"
+            }}
+          ],
+          "total_estimated_price_idr": 25000,
+          "store_section": {{
+            "sayuran": ["..."],
+            "bumbu": ["..."],
+            "protein": ["..."]
+          }}
+        }}
+        """
         raw = self._call_gemini(prompt)
         try:
             if "```json" in raw:
