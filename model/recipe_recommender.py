@@ -14,6 +14,7 @@ Arsitektur:
 - Visualisasi training dengan Matplotlib & Seaborn
 """
 
+import ast
 import os
 import re
 import json
@@ -49,7 +50,7 @@ CONFIG = {
     "embeddings_save_path": "../saved_model/recipe_embeddings.npy",
     "metadata_save_path":   "../saved_model/recipe_metadata.json",
     "encoder_save_path":    "../saved_model/label_encoder.pkl",
-    "plots_dir":            "../saved_model/plots",  # semua gambar output
+    "plots_dir":            "../saved_model/plots",  
     "max_seq_length": 64,
     "embedding_dim":  64,
     "hidden_dim":    128,
@@ -128,22 +129,77 @@ class DataPreprocessor:
 
     def save_metadata(self, df):
         metadata = []
-        for _, row in df.iterrows():
+    
+        for idx, row in df.iterrows():
+        
+            # ── Ingredients: gunakan ingredients_clean (dengan satuan) ─────
+            raw_ingredients = row.get("ingredients_cleaned", "")
+
+            # Coba ambil dari kolom ingredients_clean yang sudah berisi
+            # satuan lengkap, mis: ['450 gr daging sapi', '400 ml santan', ...]
+            raw_ingredients_with_unit = row.get("ingredients_clean", "")
+            try:
+                ingredients = [
+                    ing.strip()
+                    for ing in ast.literal_eval(str(raw_ingredients_with_unit))
+                    if str(ing).strip()
+                ]
+            except (ValueError, SyntaxError):
+                # Fallback: pisahkan berdasarkan koma dari ingredients_cleaned
+                ingredients = [
+                    ing.strip()
+                    for ing in str(raw_ingredients).split(",")
+                    if ing.strip()
+                ]
+    
+            # ── Steps: paragraph/string → list ─────────────────
+            raw_steps = row.get("steps", "")
+    
+            # Pisahkan berdasarkan numbering: 1) 2) 3)
+            split_steps = re.split(r"\d+\)", str(raw_steps))
+    
+            steps = [
+                step.strip().replace("\n", " ")
+                for step in split_steps
+                if step.strip()
+            ]
+    
+            # ── Clean URL ──────────────────────────────────────
+            url = str(row.get("url", "")).replace(" ", "").strip()
+    
             metadata.append({
-                "recipe_name":         row["recipe_name"],
-                "category":            row["category"],
-                "ingredients_cleaned": row.get("ingredients_cleaned", ""),
-                "total_ingredients":   int(row.get("total_ingredients", 0)),
-                "love_count":          int(row.get("love_count", 0)),
-                "steps":               row.get("steps", ""),
-                "url":                 row.get("url", ""),
+                "recipe_id":         int(idx + 1),
+                "recipe_name":       row.get("recipe_name", ""),
+                "category":          row.get("category", ""),
+    
+                # NEW FORMAT
+                "ingredients":       ingredients,
+    
+                # KEEP untuk backward compatibility AI lama
+                "ingredients_cleaned": raw_ingredients,
+    
+                "total_ingredients": int(row.get("total_ingredients", len(ingredients))),
+                "love_count":        int(row.get("love_count", 0)),
+    
+                # NEW FORMAT
+                "steps":             steps,
+    
+                "url":               url,
             })
-        os.makedirs(os.path.dirname(self.config["metadata_save_path"]), exist_ok=True)
-        with open(self.config["metadata_save_path"], "w", encoding="utf-8") as f:
+    
+        os.makedirs(
+            os.path.dirname(self.config["metadata_save_path"]),
+            exist_ok=True
+        )
+    
+        with open(
+            self.config["metadata_save_path"],
+            "w",
+            encoding="utf-8"
+        ) as f:
             json.dump(metadata, f, ensure_ascii=False, indent=2)
+    
         print(f"[DATA] Metadata saved: {len(metadata)} recipes")
-
-
 # ─────────────────────────────────────────────
 # 2. CUSTOM COMPONENTS
 # ─────────────────────────────────────────────
